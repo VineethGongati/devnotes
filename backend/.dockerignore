@@ -1,0 +1,44 @@
+# backend/.dockerignore
+
+# Dependencies (rebuilt inside container)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files (never copy secrets into image)
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docs (keep README excluded by default, override below)
+*.md
+!README.md
+
+# Tests & coverage
+test/
+tests/
+__tests__/
+coverage/
+.nyc_output/
+jest.config.*
+
+# Build output
+dist/
+
+# OS & editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker files (no need to copy into image)
+Dockerfile
+.dockerignore
+docker-compose*.yml

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devnotes-backend
+  namespace: devnotes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devnotes-backend
+  template:
+    metadata:
+      labels:
+        app: devnotes-backend
+    spec:
+      containers:
+        - name: backend
+          image: devnotes-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: devnotes-config
+            - secretRef:
+                name: devnotes-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: devnotes
+spec:
+  selector:
+    app: devnotes-backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP

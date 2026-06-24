@@ -1,63 +1,79 @@
-# backend/Dockerfile
-
-# Stage 1: Dependencies
+# ==========================================
+# Stage 1: Install Dependencies
+# ==========================================
 FROM node:20-alpine AS deps
 
 WORKDIR /app
-COPY package*.json ./
+
+COPY package.json package-lock.json ./
+
 RUN npm ci
 
-# Stage 2: Development (used by docker-compose.yml)
+# ==========================================
+# Stage 2: Development
+# ==========================================
 FROM node:20-alpine AS dev
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json ./
-COPY src/ ./src/
+COPY package.json package-lock.json ./
+COPY src ./src
 
 ENV NODE_ENV=development
 ENV PORT=3000
 
 EXPOSE 3000
+
 CMD ["npm", "run", "dev"]
 
-# Stage 3: Builder (test + prune for production)
+# ==========================================
+# Stage 3: Builder
+# ==========================================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json ./
-COPY src/ ./src/
+COPY package.json package-lock.json ./
+COPY src ./src
 
-# Run tests - fails build if tests fail
+# Run tests (build fails if tests fail)
 RUN npm test -- --passWithNoTests
 
-# Prune devDependencies
-RUN npm prune --production
+# Remove development dependencies
+RUN npm prune --omit=dev
 
-# Stage 4: Production runner
+# ==========================================
+# Stage 4: Production Runner
+# ==========================================
 FROM node:20-alpine AS runner
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN addgroup -S nodejs && \
+    adduser -S nodejs -G nodejs
 
 WORKDIR /app
 
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/src/ ./src/
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /app/package-lock.json ./package-lock.json
+COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
 USER nodejs
 
-# Use node instead of wget (not available in alpine by default)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
-
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+CMD node -e "\
+const http=require('http');\
+const req=http.get('http://localhost:3000/health',(res)=>{\
+process.exit(res.statusCode===200?0:1);\
+});\
+req.setTimeout(3000,()=>process.exit(1));\
+req.on('error',()=>process.exit(1));"
+
 CMD ["node", "src/server.js"]

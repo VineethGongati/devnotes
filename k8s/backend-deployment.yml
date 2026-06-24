@@ -15,8 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: devnotes-api:latest
-          imagePullPolicy: Never
+          image: vineethgongati/devnotes-backend:v3
           ports:
             - containerPort: 3000
           envFrom:

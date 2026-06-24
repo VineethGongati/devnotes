@@ -1,0 +1,39 @@
+
+backend:
+  image: 447407243853.dkr.ecr.us-east-2.amazonaws.com/devnotes-backend
+  tag: latest
+  replicas: 1
+  port: 3000
+  env:
+    nodeEnv: production
+    dbHost: postgres
+    dbPort: "5432"
+    dbName: devnotes
+    dbUser: postgres
+    dbPassword: postgres
+    redisHost: redis
+    redisPort: "6379"
+
+frontend:
+  image: 447407243853.dkr.ecr.us-east-2.amazonaws.com/devnotes-frontend
+  tag: latest
+  replicas: 1
+  port: 80
+
+postgres:
+  image: postgres
+  tag: "15-alpine"
+  replicas: 1
+  port: 5432
+  storage: 1Gi
+  env:
+    user: postgres
+    password: postgres
+    db: devnotes
+
+redis:
+  image: redis
+  tag: "7-alpine"
+  replicas: 1
+  port: 6379
+  storage: 512Mi

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: {{ .Release.Name }}-backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-backend
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      containers:
+        - name: backend
+          image: {{ .Values.backend.image }}:{{ .Values.backend.tag }}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.backend.env.nodeEnv }}
+            - name: DB_HOST
+              value: {{ .Values.backend.env.dbHost }}
+            - name: DB_PORT
+              value: {{ .Values.backend.env.dbPort | quote }}
+            - name: DB_NAME
+              value: {{ .Values.backend.env.dbName }}
+            - name: DB_USER
+              value: {{ .Values.backend.env.dbUser }}
+            - name: DB_PASSWORD
+              value: {{ .Values.backend.env.dbPassword }}
+            - name: REDIS_HOST
+              value: {{ .Values.backend.env.redisHost }}
+            - name: REDIS_PORT
+              value: {{ .Values.backend.env.redisPort | quote }}

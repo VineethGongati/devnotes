@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devnotes-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devnotes-postgres
+  template:
+    metadata:
+      labels:
+        app: devnotes-postgres
+    spec:
+      containers:
+        - name: devnotes-postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "devnotes"
+            - name: POSTGRES_USER
+              value: "devnotes"
+            - name: POSTGRES_PASSWORD
+              value: "devnotes123"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devnotes-postgres
+spec:
+  selector:
+    app: devnotes-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

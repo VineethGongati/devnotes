@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: devnotes-frontend
-          image: vineethgongati/devnotes-frontend:v5
+          image: vineethgongati/devnotes-frontend:v6
           imagePullPolicy: Never
           ports:
             - containerPort: 80
